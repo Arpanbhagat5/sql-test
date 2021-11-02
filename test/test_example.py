@@ -9,7 +9,6 @@ from psycopg2.extras import (
     RealDictRow
 )
 
-
 PATH_TO_SQL_DIR = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
@@ -32,7 +31,6 @@ class TestExample(DbTest):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
             organizations = cur.fetchall()
-            
             assert len(organizations) == 7
 
     @dbconnect
