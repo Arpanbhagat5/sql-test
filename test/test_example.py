@@ -41,6 +41,16 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT COALESCE
+        (
+            (
+                SELECT COUNT(sales_organization_id)
+                FROM enterprise_sales_enterprise_customers AS escs
+                WHERE organizations.id = escs.sales_organization_id
+                GROUP BY sales_organization_id
+            ), 0
+        ) AS subordinates_count, id
+        FROM organizations;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -86,6 +96,10 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT id,
+        ST_X(ST_ASTEXT(ST_CENTROID(bounds))) AS longitude,
+        ST_Y(ST_ASTEXT(ST_CENTROID(bounds))) AS latitude
+        FROM japan_segments;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -151,8 +165,25 @@ class TestExample(DbTest):
             conn,
             os.path.join(PATH_TO_SQL_DIR, "japan_segments.sql")
         )
-
         sql = """
+        SELECT id
+        FROM japan_segments AS outref
+        WHERE ST_WITHIN(
+            (
+                SELECT bounds
+                FROM japan_segments AS inref
+                WHERE inref.id = outref.id
+            ), ST_SetSRID(
+                ST_GeomFromGeoJSON(
+                    '{"type":"Polygon",
+                    "coordinates":[[[130.27313232421875,30.519681272749402],
+                    [131.02020263671875,30.519681272749402],
+                    [131.02020263671875,30.80909017893796],
+                    [130.27313232421875,30.80909017893796],
+                    [130.27313232421875,30.519681272749402]]]}'
+                ), 4326
+            )
+        )
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
